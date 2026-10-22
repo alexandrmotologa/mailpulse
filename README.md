@@ -6,6 +6,14 @@ MailPulse intercepts outgoing email traffic on port 1025 during local applicatio
 
 ![MailPulse Demo](docs/images/mailpulse_demo.gif)
 
+## Studio Interface
+
+| Desktop HTML Preview & OTP Extractor | Deliverability & Spam Score Linter |
+| :---: | :---: |
+| ![Desktop Preview](docs/images/mailpulse-1.png) | ![Spam Audit](docs/images/mailpulse-2.png) |
+| **Mobile Responsive Sandbox (iPhone 15)** | **MIME Headers & Webhook Forwarder** |
+| ![Mobile Frame](docs/images/mailpulse-3.png) | ![Webhook Modal](docs/images/mailpulse-4.png) |
+
 ## Capabilities
 
 - **Zero configuration SMTP capture**: Listens on `127.0.0.1:1025` and accepts plain or authenticated SMTP traffic from any framework without setup.
