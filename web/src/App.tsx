@@ -432,33 +432,38 @@ export function App() {
       {/* Main Studio Area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Inbox Sidebar */}
-        <MessageList
-          messages={messages}
-          selectedId={selectedId}
-          onSelect={handleSelect}
-          onDelete={handleDelete}
-          onToggleStar={handleToggleStar}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          currentTag={currentTag}
-          onTagChange={setCurrentTag}
-        />
+        <div className={`${selectedId ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96 shrink-0 h-full overflow-hidden`}>
+          <MessageList
+            messages={messages}
+            selectedId={selectedId}
+            onSelect={handleSelect}
+            onDelete={handleDelete}
+            onToggleStar={handleToggleStar}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            currentTag={currentTag}
+            onTagChange={setCurrentTag}
+          />
+        </div>
 
         {/* Right Detail Pane */}
         {selectedMessage ? (
-          <MessageDetail
-            message={selectedMessage}
-            onDelete={handleDelete}
-            onToggleStar={handleToggleStar}
-            onToggleRead={handleToggleRead}
-            onForwardToWebhook={handleForwardToWebhook}
-            onOpenE2EModal={(email) => {
-              setE2eTargetEmail(email);
-              setIsE2EModalOpen(true);
-            }}
-            activeTab={activeDetailTab}
-            onTabChange={setActiveDetailTab}
-          />
+          <div className={`${!selectedId ? 'hidden md:flex' : 'flex'} flex-1 h-full overflow-hidden`}>
+            <MessageDetail
+              message={selectedMessage}
+              onDelete={handleDelete}
+              onToggleStar={handleToggleStar}
+              onToggleRead={handleToggleRead}
+              onForwardToWebhook={handleForwardToWebhook}
+              onOpenE2EModal={(email) => {
+                setE2eTargetEmail(email);
+                setIsE2EModalOpen(true);
+              }}
+              onBack={() => setSelectedId(null)}
+              activeTab={activeDetailTab}
+              onTabChange={setActiveDetailTab}
+            />
+          </div>
         ) : (
           /* Empty State */
           <div className="flex-1 flex flex-col items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 text-center select-text">

@@ -13,12 +13,13 @@ import {
   ExternalLink, 
   Copy, 
   Check, 
-  Share2,
+  Share2, 
   MailCheck,
   Terminal,
   FileCode,
   Activity,
-  AlertCircle
+  AlertCircle,
+  ChevronLeft
 } from 'lucide-react';
 import { MessageDetail as IMessageDetail, LinkProbeResult } from '../types';
 import { DeviceFrame } from './DeviceFrame';
@@ -33,6 +34,7 @@ interface MessageDetailProps {
   onToggleRead: (id: string, isRead: boolean) => void;
   onForwardToWebhook: (id: string) => Promise<{ success: boolean; error?: string }>;
   onOpenE2EModal: (recipientEmail: string) => void;
+  onBack?: () => void;
   activeTab?: TabType;
   onTabChange?: (tab: TabType) => void;
 }
@@ -46,6 +48,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
   onToggleRead,
   onForwardToWebhook,
   onOpenE2EModal,
+  onBack,
   activeTab: externalTab,
   onTabChange,
 }) => {
@@ -111,6 +114,15 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
       <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4 shrink-0 bg-white dark:bg-slate-900">
         <div className="space-y-1.5 flex-1 min-w-0">
           <div className="flex items-center gap-2">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="md:hidden p-1 -ml-1 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                title="Back to inbox"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            )}
             <h2 className="text-base font-bold text-slate-900 dark:text-white truncate">
               {message.subject || '(No Subject)'}
             </h2>

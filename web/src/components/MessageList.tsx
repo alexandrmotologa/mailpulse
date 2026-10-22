@@ -51,7 +51,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   };
 
   return (
-    <div className="w-80 md:w-96 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full shrink-0">
+    <div className="w-full border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full shrink-0">
       {/* Search Bar */}
       <div className="p-3 border-b border-slate-200 dark:border-slate-800">
         <div className="relative">

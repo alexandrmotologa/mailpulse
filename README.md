@@ -1,18 +1,24 @@
-# MailPulse
-
-Local SMTP capture server, responsive HTML email sandbox, and deliverability linter written in Go and React 19.
+<p align="center">
+  <img src="docs/images/mailpulse_logo.png" width="140" alt="MailPulse Logo" />
+</p>
+<h1 align="center">MailPulse</h1>
+<p align="center">
+  <strong>Local SMTP capture server, responsive HTML email sandbox, and deliverability linter written in Go and React 19.</strong>
+</p>
 
 MailPulse intercepts outgoing email traffic on port 1025 during local application development. It provides an interactive web workspace on port 8025 to test HTML rendering across mobile and desktop viewports, audit spam scores, extract verification codes, and route received payloads to local webhooks.
 
-![MailPulse Demo](docs/images/mailpulse_demo.gif)
+<p align="center">
+  <img src="docs/images/mailpulse_demo.gif" alt="MailPulse Demo" width="100%" />
+</p>
 
 ## Studio Interface
 
-| Desktop HTML Preview & OTP Extractor | Deliverability & Spam Score Linter |
+| Desktop Sandbox & OTP Extractor | Deliverability & Spam Score Linter |
 | :---: | :---: |
 | ![Desktop Preview](docs/images/mailpulse-1.png) | ![Spam Audit](docs/images/mailpulse-2.png) |
-| **Mobile Responsive Sandbox (iPhone 15)** | **MIME Headers & Webhook Forwarder** |
-| ![Mobile Frame](docs/images/mailpulse-3.png) | ![Webhook Modal](docs/images/mailpulse-4.png) |
+| **Synchronized Dual View (Desktop + iPhone 15)** | **E2E Test Automation Recipes Modal** |
+| ![Dual View](docs/images/mailpulse-3.png) | ![Test Recipes](docs/images/mailpulse-4.png) |
 
 ## Capabilities
 
