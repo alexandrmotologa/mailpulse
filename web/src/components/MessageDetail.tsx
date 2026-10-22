@@ -14,9 +14,13 @@ import {
   Copy, 
   Check, 
   Share2,
-  MailCheck
+  MailCheck,
+  Terminal,
+  FileCode,
+  Activity,
+  AlertCircle
 } from 'lucide-react';
-import { MessageDetail as IMessageDetail } from '../types';
+import { MessageDetail as IMessageDetail, LinkProbeResult } from '../types';
 import { DeviceFrame } from './DeviceFrame';
 import { OtpBanner } from './OtpBanner';
 import { SpamAuditScore } from './SpamAuditScore';
@@ -28,9 +32,12 @@ interface MessageDetailProps {
   onToggleStar: (id: string, isStarred: boolean) => void;
   onToggleRead: (id: string, isRead: boolean) => void;
   onForwardToWebhook: (id: string) => Promise<{ success: boolean; error?: string }>;
+  onOpenE2EModal: (recipientEmail: string) => void;
+  activeTab?: TabType;
+  onTabChange?: (tab: TabType) => void;
 }
 
-type TabType = 'preview' | 'text' | 'html' | 'spam' | 'headers' | 'attachments';
+export type TabType = 'preview' | 'text' | 'html' | 'spam' | 'headers' | 'attachments';
 
 export const MessageDetail: React.FC<MessageDetailProps> = ({
   message,
@@ -38,11 +45,24 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
   onToggleStar,
   onToggleRead,
   onForwardToWebhook,
+  onOpenE2EModal,
+  activeTab: externalTab,
+  onTabChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('preview');
+  const [internalTab, setInternalTab] = useState<TabType>('preview');
+  const activeTab = externalTab ?? internalTab;
+  const setActiveTab = (tab: TabType) => {
+    setInternalTab(tab);
+    onTabChange?.(tab);
+  };
+
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [isForwarding, setIsForwarding] = useState(false);
   const [forwardSuccess, setForwardSuccess] = useState<boolean | null>(null);
+
+  // Link Prober State
+  const [isProbing, setIsProbing] = useState(false);
+  const [probeResults, setProbeResults] = useState<Record<string, LinkProbeResult>>({});
 
   const handleCopyLink = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -62,6 +82,29 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
     }
   };
 
+  const handleProbeLinks = async () => {
+    setIsProbing(true);
+    try {
+      const res = await fetch(`/api/messages/${message.id}/probe-links`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        const resultsMap: Record<string, LinkProbeResult> = {};
+        if (data.results && Array.isArray(data.results)) {
+          data.results.forEach((r: LinkProbeResult) => {
+            resultsMap[r.url] = r;
+          });
+        }
+        setProbeResults(resultsMap);
+      }
+    } catch (err) {
+      console.error('Failed to probe links:', err);
+    } finally {
+      setIsProbing(false);
+    }
+  };
+
+  const recipientEmail = message.to[0]?.address || 'user@example.com';
+
   return (
     <div className="flex-1 flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden">
       {/* Top Header Bar */}
@@ -74,7 +117,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
             <button
               onClick={() => onToggleStar(message.id, !message.isStarred)}
               className="text-slate-400 hover:text-amber-500 transition-colors shrink-0"
-              title={message.isStarred ? 'Unstar' : 'Star'}
+              title={message.isStarred ? 'Unstar (s)' : 'Star (s)'}
             >
               <Star className={`w-4 h-4 ${message.isStarred ? 'text-amber-500 fill-amber-500' : ''}`} />
             </button>
@@ -97,10 +140,20 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-1.5 shrink-0">
+          {/* E2E Test Recipes Trigger */}
+          <button
+            onClick={() => onOpenE2EModal(recipientEmail)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition-colors shadow-2xs"
+            title="Open automated test recipes (Playwright, Cypress, Pytest)"
+          >
+            <Terminal className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">E2E Code</span>
+          </button>
+
           <button
             onClick={() => onToggleRead(message.id, !message.isRead)}
             className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title={message.isRead ? "Mark as unread" : "Mark as read"}
+            title={message.isRead ? "Mark as unread (x)" : "Mark as read (x)"}
           >
             <MailCheck className="w-4 h-4" />
           </button>
@@ -109,7 +162,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
             onClick={handleForward}
             disabled={isForwarding}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors shadow-xs"
-            title="Forward to local webhook"
+            title="Forward to configured local webhook"
           >
             <Share2 className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">
@@ -117,11 +170,22 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
             </span>
           </button>
 
+          {/* Export Self-Contained Standalone HTML */}
+          <a
+            href={`/api/messages/${message.id}/export-html`}
+            download={`mailpulse-${message.id.slice(0, 8)}.html`}
+            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Export standalone portable HTML snapshot"
+          >
+            <FileCode className="w-4 h-4" />
+          </a>
+
+          {/* Download Raw RFC 5322 EML */}
           <a
             href={`/api/messages/${message.id}/raw`}
             download={`${message.id}.eml`}
             className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Download raw EML"
+            title="Download raw EML message file"
           >
             <Download className="w-4 h-4" />
           </a>
@@ -129,7 +193,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           <button
             onClick={() => onDelete(message.id)}
             className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-            title="Delete email"
+            title="Delete email (Delete)"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -141,43 +205,83 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
 
       {/* Magic Links Strip if present */}
       {message.magicLinks && message.magicLinks.length > 0 && (
-        <div className="bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 px-4 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 shrink-0">
-            <LinkIcon className="w-3 h-3 text-indigo-500" />
-            <span>Extracted Links:</span>
+        <div className="bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 px-4 py-2 flex items-center justify-between gap-3 overflow-x-auto shrink-0">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+              <LinkIcon className="w-3 h-3 text-indigo-500" />
+              <span>Extracted Links:</span>
+            </div>
+
+            {message.magicLinks.map((link, idx) => {
+              const probe = probeResults[link.url];
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs shrink-0 shadow-2xs"
+                >
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 max-w-[140px] truncate" title={link.text || link.url}>
+                    {link.text || link.host}
+                  </span>
+                  <span className="text-[10px] font-mono px-1 rounded bg-slate-100 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 uppercase">
+                    {link.category}
+                  </span>
+
+                  {/* Probe Result Pill if probed */}
+                  {probe && (
+                    <span
+                      className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded flex items-center gap-1 ${
+                        probe.ok
+                          ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                          : probe.statusCode >= 300 && probe.statusCode < 400
+                          ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                          : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                      }`}
+                      title={probe.error ? `Error: ${probe.error}` : `Status ${probe.statusCode} in ${probe.durationMs}ms`}
+                    >
+                      {probe.ok ? (
+                        `${probe.statusCode} (${probe.durationMs}ms)`
+                      ) : probe.error ? (
+                        <>
+                          <AlertCircle className="w-2.5 h-2.5" />
+                          <span>Err</span>
+                        </>
+                      ) : (
+                        `${probe.statusCode}`
+                      )}
+                    </span>
+                  )}
+
+                  <button
+                    onClick={() => handleCopyLink(link.url)}
+                    className="p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                    title="Copy link to clipboard"
+                  >
+                    {copiedLink === link.url ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                  </button>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                    title="Open link in new browser tab"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            {message.magicLinks.slice(0, 3).map((link, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-1.5 px-2 py-1 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs shrink-0 shadow-2xs"
-              >
-                <span className="font-semibold text-slate-800 dark:text-slate-200 max-w-[140px] truncate">
-                  {link.text || link.host}
-                </span>
-                <span className="text-[10px] font-mono px-1 rounded bg-slate-100 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 uppercase">
-                  {link.category}
-                </span>
-                <button
-                  onClick={() => handleCopyLink(link.url)}
-                  className="p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                  title="Copy link"
-                >
-                  {copiedLink === link.url ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                </button>
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                  title="Open link in new tab"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            ))}
-          </div>
+          {/* Active Probe Trigger */}
+          <button
+            onClick={handleProbeLinks}
+            disabled={isProbing}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 shrink-0 transition-colors shadow-2xs"
+            title="Perform active HTTP HEAD/GET health check on all links"
+          >
+            <Activity className={`w-3 h-3 text-indigo-500 ${isProbing ? 'animate-spin' : ''}`} />
+            <span>{isProbing ? 'Probing...' : 'Probe All Links'}</span>
+          </button>
         </div>
       )}
 
@@ -190,6 +294,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
+          title="Sandbox Preview (1)"
         >
           <Eye className="w-3.5 h-3.5" />
           <span>HTML Sandbox</span>
@@ -202,6 +307,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
+          title="Plain Text (2)"
         >
           <FileText className="w-3.5 h-3.5" />
           <span>Plain Text</span>
@@ -214,6 +320,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
+          title="HTML Source (3)"
         >
           <Code className="w-3.5 h-3.5" />
           <span>HTML Source</span>
@@ -226,6 +333,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
+          title="Deliverability & Spam Audit (4)"
         >
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>Spam Audit ({message.spamReport.score})</span>
@@ -238,6 +346,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
+          title="RFC Headers (5)"
         >
           <ListTree className="w-3.5 h-3.5" />
           <span>MIME Headers</span>

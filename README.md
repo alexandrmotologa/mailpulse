@@ -18,9 +18,14 @@ MailPulse intercepts outgoing email traffic on port 1025 during local applicatio
 
 - **Zero configuration SMTP capture**: Listens on `127.0.0.1:1025` and accepts plain or authenticated SMTP traffic from any framework without setup.
 - **Responsive email sandbox**: Renders HTML emails in sandboxed iframes with viewport presets for Desktop, iPad, iPhone 15, and Android devices.
+- **Dual view mode with synchronized scrolling**: Inspects Desktop and iPhone 15 side-by-side with proportional scroll locking.
+- **E2E test automation long-polling**: Blocks until matching emails arrive via `GET /api/messages/wait` for zero-flakiness tests in Playwright, Cypress, and Pytest.
+- **SMTP chaos and latency simulator**: Injects configurable artificial network delays and simulated error codes (421, 450, 550) for resilience testing.
+- **Active link health prober**: Runs concurrent HTTP HEAD/GET health checks on all extracted magic links with roundtrip latency metrics.
 - **Dark mode simulation**: Emulates both standard `prefers-color-scheme: dark` CSS rules and email client background color inversions.
 - **1-click OTP extraction**: Automatically identifies 4 to 8 digit verification PINs and authentication magic links with instant clipboard copy buttons.
 - **Deliverability and spam audit**: Calculates a score from 0 to 100 based on text-to-image ratio, subject line capitalization, missing RFC 5322 headers, and Gmail 102 kB clipping limits.
+- **Portable HTML and ZIP export**: Downloads standalone single-file HTML email snapshots or complete ZIP archives with raw EMLs and attachments.
 - **CID image resolution**: Automatically converts inline `cid:<id>` multipart image references into viewable data URIs.
 - **Local webhook forwarding**: Dispatches captured messages as JSON payloads to local HTTP endpoints in real time.
 - **Single binary distribution**: Packages the React 19 web frontend directly into the Go executable via `go:embed`.
@@ -59,7 +64,33 @@ Usage of mailpulse:
   --db-path string     File path for the SQLite database (default "mailpulse.db")
   --max-messages int   Maximum messages to retain in memory (default 500)
   --webhook-url string Target HTTP URL to forward captured emails to (optional)
+  --seed               Seed sample emails into the inbox on startup
   --no-open            Do not automatically open the browser on startup
+```
+
+## E2E Test Automation
+
+MailPulse provides a blocking wait endpoint that eliminates arbitrary sleeps or polling loops in automated tests:
+
+### Playwright (TypeScript)
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('verify account with email passcode', async ({ page, request }) => {
+  await page.goto('http://localhost:3000/login');
+  await page.fill('input[type="email"]', 'tester@domain.com');
+  await page.click('button[type="submit"]');
+
+  // Waits up to 10 seconds for the email to arrive
+  const res = await request.get('http://127.0.0.1:8025/api/messages/wait?to=tester%40domain.com&timeout=10');
+  expect(res.status()).toBe(200);
+
+  const message = await res.json();
+  await page.fill('input[name="otp"]', message.otp.code);
+  await page.click('button:has-text("Verify")');
+  await expect(page).toHaveURL('/dashboard');
+});
 ```
 
 ## Connecting Your Framework
@@ -142,6 +173,12 @@ MailPulse exposes a JSON API on port 8025:
 |---|---|---|
 | `GET` | `/api/messages` | Lists stored messages with query filtering |
 | `GET` | `/api/messages/{id}` | Retrieves parsed details for a single message |
+| `GET` | `/api/messages/wait` | Blocking long-poll for E2E automation |
+| `GET` | `/api/messages/latest` | Returns most recent captured message |
+| `POST` | `/api/messages/{id}/probe-links` | Probes all magic links for HTTP health |
+| `GET` | `/api/messages/{id}/export-html` | Exports portable standalone HTML snapshot |
+| `GET` | `/api/export-zip` | Streams complete archive of all messages and EMLs |
+| `GET` / `POST` | `/api/chaos/config` | Gets or sets SMTP chaos latency and failure rates |
 | `GET` | `/api/messages/{id}/html` | Returns raw HTML body for iframe isolation |
 | `GET` | `/api/messages/{id}/raw` | Downloads the unparsed RFC 5322 EML source |
 | `GET` | `/api/messages/{id}/attachments/{filename}` | Downloads a binary attachment |
@@ -151,6 +188,20 @@ MailPulse exposes a JSON API on port 8025:
 | `POST` | `/api/send-sample` | Injects synthetic test emails into the inbox |
 | `GET` | `/api/stats` | Returns total counts and inbox health metrics |
 | `GET` | `/api/events` | Server-Sent Events stream for real-time inbox updates |
+
+## Keyboard Shortcuts
+
+| Shortcut | Description |
+|---|---|
+| `j` / `Down` | Select next email |
+| `k` / `Up` | Select previous email |
+| `c` | Copy OTP verification code |
+| `s` | Star or unstar selected email |
+| `x` / `r` | Mark as read or unread |
+| `Delete` / `#` | Delete selected email |
+| `1` - `5` | Switch tabs (Sandbox, Text, HTML, Spam, Headers) |
+| `?` | Open keyboard shortcuts cheatsheet |
+| `Esc` | Close open dialogs |
 
 ## Webhook Payload Format
 
@@ -171,14 +222,14 @@ When forwarding is configured via `--webhook-url` or the web interface, MailPuls
     }
   ],
   "subject": "Your verification code is 782104",
-  "text": "Your verification code is 782104.",
-  "html": "<p>Your verification code is <strong>782104</strong>.</p>",
+  "textBody": "Your verification code is 782104.",
+  "htmlBody": "<p>Your verification code is <strong>782104</strong>.</p>",
   "otp": {
     "code": "782104",
     "type": "numeric_6",
     "context": "verification code"
   },
-  "spamScore": {
+  "spamReport": {
     "score": 95,
     "verdict": "pass"
   }
@@ -189,8 +240,9 @@ When forwarding is configured via `--webhook-url` or the web interface, MailPuls
 
 MailPulse combines a Go backend with a React 19 frontend:
 - **SMTP Daemon**: Built on `github.com/emersion/go-smtp`, handling connection lifecycle, auth bypass, and raw envelope capture.
+- **Chaos Manager**: Simulates network latency and failure codes before accepting or rejecting payloads.
 - **MIME Engine**: Decodes nested multiparts, transcode character sets, resolves Content-ID inline images into data URIs, and separates binary attachments.
-- **Linter Engine**: Inspects plain and HTML message bodies, verifies standard RFC headers, detects spam triggers, and calculates text-to-image ratios.
+- **Linter Engine**: Inspects plain and HTML message bodies, verifies standard RFC headers, detects spam triggers, and probes active link status.
 - **Web Interface**: React 19, TypeScript, Tailwind CSS, and Lucide icons communicating via REST and Server-Sent Events.
 
 Detailed architecture diagrams and design choices are documented in [docs/architecture.md](docs/architecture.md).
@@ -213,10 +265,10 @@ npm run build
 cd ..
 
 # 2. Build Go binary with embedded frontend
-go build -o mailpulse cmd/mailpulse/main.go
+go build -ldflags "-s -w" -o mailpulse.exe cmd/mailpulse/main.go
 
 # 3. Run application
-./mailpulse
+./mailpulse.exe
 ```
 
 ## License

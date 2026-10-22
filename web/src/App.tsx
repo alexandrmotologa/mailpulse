@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { MessageList } from './components/MessageList';
-import { MessageDetail } from './components/MessageDetail';
+import { MessageDetail, TabType } from './components/MessageDetail';
 import { WebhookModal } from './components/WebhookModal';
+import { E2ESnippetsModal } from './components/E2ESnippetsModal';
+import { ChaosModal } from './components/ChaosModal';
+import { ShortcutsModal } from './components/ShortcutsModal';
 import { useMailStream } from './hooks/useMailStream';
-import { MessageSummary, MessageDetail as IMessageDetail, ServerStats, WebhookLog } from './types';
+import { MessageSummary, MessageDetail as IMessageDetail, ServerStats, WebhookLog, ChaosConfig } from './types';
 import { Inbox, Terminal } from 'lucide-react';
 
 export function App() {
@@ -17,8 +20,19 @@ export function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
+
+  // Active detail tab
+  const [activeDetailTab, setActiveDetailTab] = useState<TabType>('preview');
+
+  // Modals state
   const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
+  const [isE2EModalOpen, setIsE2EModalOpen] = useState(false);
+  const [e2eTargetEmail, setE2eTargetEmail] = useState('user@example.com');
+  const [isChaosModalOpen, setIsChaosModalOpen] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+
   const [webhookUrl, setWebhookUrl] = useState('');
+  const [chaosConfig, setChaosConfig] = useState<ChaosConfig | null>(null);
 
   // Apply dark mode class to html element
   useEffect(() => {
@@ -29,7 +43,7 @@ export function App() {
     }
   }, [isDarkMode]);
 
-  // Load initial stats and webhook config
+  // Load initial stats, webhook config, and chaos config
   const fetchStats = useCallback(async () => {
     try {
       const res = await fetch('/api/stats');
@@ -51,6 +65,18 @@ export function App() {
       }
     } catch (err) {
       console.error('Failed to fetch webhook config:', err);
+    }
+  }, []);
+
+  const fetchChaosConfig = useCallback(async () => {
+    try {
+      const res = await fetch('/api/chaos/config');
+      if (res.ok) {
+        const data = await res.json();
+        setChaosConfig(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch chaos config:', err);
     }
   }, []);
 
@@ -101,7 +127,8 @@ export function App() {
   useEffect(() => {
     fetchStats();
     fetchWebhookConfig();
-  }, [fetchStats, fetchWebhookConfig]);
+    fetchChaosConfig();
+  }, [fetchStats, fetchWebhookConfig, fetchChaosConfig]);
 
   useEffect(() => {
     fetchMessages();
@@ -218,7 +245,7 @@ export function App() {
         prev.map((m) => (m.id === id ? { ...m, isStarred } : m))
       );
       if (selectedMessage && selectedMessage.id === id) {
-        setSelectedMessage((prev) => prev ? { ...prev, isStarred } : null);
+        setSelectedMessage((prev) => (prev ? { ...prev, isStarred } : null));
       }
     } catch (err) {
       console.error('Failed to toggle star:', err);
@@ -236,7 +263,7 @@ export function App() {
         prev.map((m) => (m.id === id ? { ...m, isRead } : m))
       );
       if (selectedMessage && selectedMessage.id === id) {
-        setSelectedMessage((prev) => prev ? { ...prev, isRead } : null);
+        setSelectedMessage((prev) => (prev ? { ...prev, isRead } : null));
       }
     } catch (err) {
       console.error('Failed to toggle read:', err);
@@ -296,6 +323,96 @@ export function App() {
     return [];
   };
 
+  // Keyboard navigation & shortcuts (Superhuman / Gmail style)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        if (e.key === 'Escape') {
+          target.blur();
+        }
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        setIsWebhookModalOpen(false);
+        setIsE2EModalOpen(false);
+        setIsChaosModalOpen(false);
+        setIsShortcutsModalOpen(false);
+        return;
+      }
+
+      if (e.key === '?') {
+        setIsShortcutsModalOpen((prev) => !prev);
+        return;
+      }
+
+      // Next / Previous email
+      if (e.key === 'j' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (messages.length === 0) return;
+        const currentIndex = messages.findIndex((m) => m.id === selectedId);
+        if (currentIndex === -1 || currentIndex >= messages.length - 1) {
+          setSelectedId(messages[0].id);
+        } else {
+          setSelectedId(messages[currentIndex + 1].id);
+        }
+        return;
+      }
+
+      if (e.key === 'k' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (messages.length === 0) return;
+        const currentIndex = messages.findIndex((m) => m.id === selectedId);
+        if (currentIndex <= 0) {
+          setSelectedId(messages[messages.length - 1].id);
+        } else {
+          setSelectedId(messages[currentIndex - 1].id);
+        }
+        return;
+      }
+
+      // Actions on selected message
+      if (selectedMessage) {
+        if (e.key === 'c' && selectedMessage.otp?.code) {
+          navigator.clipboard.writeText(selectedMessage.otp.code);
+          return;
+        }
+
+        if (e.key === 's') {
+          handleToggleStar(selectedMessage.id, !selectedMessage.isStarred);
+          return;
+        }
+
+        if (e.key === 'x' || e.key === 'r') {
+          handleToggleRead(selectedMessage.id, !selectedMessage.isRead);
+          return;
+        }
+
+        if (e.key === 'Delete' || e.key === '#') {
+          handleDelete(selectedMessage.id);
+          return;
+        }
+
+        // View Tabs switching
+        if (e.key === '1') setActiveDetailTab('preview');
+        if (e.key === '2') setActiveDetailTab('text');
+        if (e.key === '3') setActiveDetailTab('html');
+        if (e.key === '4') setActiveDetailTab('spam');
+        if (e.key === '5') setActiveDetailTab('headers');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [messages, selectedId, selectedMessage]);
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Top Application Header */}
@@ -303,10 +420,13 @@ export function App() {
         stats={stats}
         isConnected={isConnected}
         isDarkMode={isDarkMode}
+        isChaosEnabled={chaosConfig?.enabled}
         onToggleTheme={() => setIsDarkMode(!isDarkMode)}
         onClearAll={handleClearAll}
         onSendSample={handleSendSample}
         onOpenWebhookModal={() => setIsWebhookModalOpen(true)}
+        onOpenChaosModal={() => setIsChaosModalOpen(true)}
+        onOpenShortcutsModal={() => setIsShortcutsModalOpen(true)}
       />
 
       {/* Main Studio Area */}
@@ -332,6 +452,12 @@ export function App() {
             onToggleStar={handleToggleStar}
             onToggleRead={handleToggleRead}
             onForwardToWebhook={handleForwardToWebhook}
+            onOpenE2EModal={(email) => {
+              setE2eTargetEmail(email);
+              setIsE2EModalOpen(true);
+            }}
+            activeTab={activeDetailTab}
+            onTabChange={setActiveDetailTab}
           />
         ) : (
           /* Empty State */
@@ -346,7 +472,7 @@ export function App() {
                   MailPulse Email Studio
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                  Local SMTP server listening on <span className="font-mono text-indigo-600 dark:text-indigo-400 font-semibold">127.0.0.1:1025</span>. Any email sent from your development environment will appear here instantly.
+                  Local SMTP server listening on <span className="font-mono text-indigo-600 dark:text-indigo-400 font-semibold">127.0.0.1:{stats?.smtpPort || 1025}</span>. Any email sent from your development environment will appear here instantly.
                 </p>
               </div>
 
@@ -358,10 +484,16 @@ export function App() {
                   Generate Sample Email
                 </button>
                 <button
+                  onClick={() => setIsE2EModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                >
+                  E2E Recipes
+                </button>
+                <button
                   onClick={() => setIsWebhookModalOpen(true)}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
                 >
-                  Configure Webhook
+                  Webhooks
                 </button>
               </div>
 
@@ -372,12 +504,12 @@ export function App() {
                     <Terminal className="w-3.5 h-3.5 text-indigo-500" />
                     <span>Quick Nodemailer Config</span>
                   </span>
-                  <span>Port 1025</span>
+                  <span>Port {stats?.smtpPort || 1025}</span>
                 </div>
                 <pre className="text-slate-700 dark:text-slate-300 overflow-x-auto text-[11px] leading-relaxed">
 {`const transporter = nodemailer.createTransport({
   host: "127.0.0.1",
-  port: 1025,
+  port: ${stats?.smtpPort || 1025},
   secure: false,
 });`}
                 </pre>
@@ -394,6 +526,28 @@ export function App() {
         onRefreshLogs={handleRefreshWebhookLogs}
         onSaveConfig={handleSaveWebhookConfig}
         currentUrl={webhookUrl}
+      />
+
+      {/* E2E Test Recipes Modal */}
+      <E2ESnippetsModal
+        isOpen={isE2EModalOpen}
+        onClose={() => setIsE2EModalOpen(false)}
+        targetEmail={e2eTargetEmail}
+        smtpPort={stats?.smtpPort || 1025}
+        webPort={stats?.webPort || 8025}
+      />
+
+      {/* SMTP Chaos Simulator Modal */}
+      <ChaosModal
+        isOpen={isChaosModalOpen}
+        onClose={() => setIsChaosModalOpen(false)}
+        onConfigChange={(newCfg) => setChaosConfig(newCfg)}
+      />
+
+      {/* Keyboard Shortcuts Cheatsheet Modal */}
+      <ShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
       />
     </div>
   );

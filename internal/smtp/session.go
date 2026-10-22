@@ -45,6 +45,13 @@ func (s *Session) Rcpt(to string, opts *smtp.RcptOptions) error {
 }
 
 func (s *Session) Data(r io.Reader) error {
+	// Maybe inject artificial latency or chaos failure
+	if s.backend.chaos != nil {
+		if err := s.backend.chaos.MaybeInject(); err != nil {
+			return err
+		}
+	}
+
 	// Read with 25 MB safety ceiling
 	maxBytes := int64(25 * 1024 * 1024)
 	limitReader := io.LimitReader(r, maxBytes)

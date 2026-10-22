@@ -106,3 +106,21 @@ export interface WebhookLog {
   responseBody: string;
   error?: string;
 }
+
+export interface LinkProbeResult {
+  url: string;
+  statusCode: number;
+  ok: boolean;
+  durationMs: number;
+  redirectUrl?: string;
+  error?: string;
+}
+
+export interface ChaosConfig {
+  enabled: boolean;
+  latencyMs: number;
+  failureRate: number;
+  errorCode: number;
+  errorMessage: string;
+}
+

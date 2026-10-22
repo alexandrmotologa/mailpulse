@@ -22,7 +22,7 @@ func TestSMTPServerEndToEnd(t *testing.T) {
 
 	server, err := NewServer("127.0.0.1", port, store, disp, func(m *model.Message) {
 		msgChan <- m
-	}, false)
+	}, false, nil)
 	if err != nil {
 		t.Fatalf("failed to create SMTP server: %v", err)
 	}
@@ -104,5 +104,39 @@ func TestSMTPServerEndToEnd(t *testing.T) {
 	}
 	if stats.TotalMessages != 2 {
 		t.Errorf("expected 2 total messages, got %d", stats.TotalMessages)
+	}
+}
+
+func TestSMTPChaosInjection(t *testing.T) {
+	port := 11026
+	store := storage.NewMemoryStore(10, port, 8025)
+	disp := webhook.NewDispatcher("")
+	chaos := NewChaosManager()
+
+	// Configure 100% failure rate
+	chaos.SetConfig(ChaosConfig{
+		Enabled:      true,
+		LatencyMs:    10,
+		FailureRate:  100,
+		ErrorCode:    421,
+		ErrorMessage: "Service Temporarily Unavailable",
+	})
+
+	server, err := NewServer("127.0.0.1", port, store, disp, nil, false, chaos)
+	if err != nil {
+		t.Fatalf("failed to create server: %v", err)
+	}
+
+	go func() {
+		_ = server.Start()
+	}()
+	defer server.Close()
+
+	time.Sleep(100 * time.Millisecond)
+
+	msg := []byte("Subject: Test\r\n\r\nBody")
+	err = smtp.SendMail(fmt.Sprintf("127.0.0.1:%d", port), nil, "from@test.com", []string{"to@test.com"}, msg)
+	if err == nil {
+		t.Fatal("expected SMTP send failure under 100% chaos, got nil error")
 	}
 }

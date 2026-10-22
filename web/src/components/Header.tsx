@@ -10,7 +10,10 @@ import {
   ShieldAlert, 
   FileText, 
   Key, 
-  Receipt
+  Receipt,
+  Flame,
+  Archive,
+  Keyboard
 } from 'lucide-react';
 import { ServerStats } from '../types';
 
@@ -18,20 +21,26 @@ interface HeaderProps {
   stats: ServerStats | null;
   isConnected: boolean;
   isDarkMode: boolean;
+  isChaosEnabled?: boolean;
   onToggleTheme: () => void;
   onClearAll: () => void;
   onSendSample: (template: string) => Promise<void>;
   onOpenWebhookModal: () => void;
+  onOpenChaosModal: () => void;
+  onOpenShortcutsModal: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   stats,
   isConnected,
   isDarkMode,
+  isChaosEnabled = false,
   onToggleTheme,
   onClearAll,
   onSendSample,
   onOpenWebhookModal,
+  onOpenChaosModal,
+  onOpenShortcutsModal,
 }) => {
   const [isSampleOpen, setIsSampleOpen] = useState(false);
   const [sendingTemplate, setSendingTemplate] = useState<string | null>(null);
@@ -73,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+        <div className="h-4 w-px bg-slate-200 dark:border-slate-800 mx-1 hidden sm:block" />
 
         {/* SMTP Port Badge */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60">
@@ -90,24 +99,36 @@ export const Header: React.FC<HeaderProps> = ({
           <span>SMTP :{stats?.smtpPort || 1025}</span>
         </div>
 
+        {/* Chaos Active Indicator Pill */}
+        {isChaosEnabled && (
+          <button
+            onClick={onOpenChaosModal}
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 transition-colors animate-pulse"
+            title="Chaos Simulator is actively injecting SMTP latency or faults"
+          >
+            <Flame className="w-3 h-3" />
+            <span>Chaos Active</span>
+          </button>
+        )}
+
         {/* Total Count Badge */}
         {stats && stats.totalMessages > 0 && (
-          <span className="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline">
+          <span className="text-xs text-slate-500 dark:text-slate-400 hidden md:inline">
             {stats.totalMessages} {stats.totalMessages === 1 ? 'email' : 'emails'}
           </span>
         )}
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {/* Send Sample Dropdown */}
         <div className="relative">
           <button
             onClick={() => setIsSampleOpen(!isSampleOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/80 transition-colors shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/80 transition-colors shadow-2xs"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>Send Sample</span>
+            <span className="hidden sm:inline">Send Sample</span>
             <ChevronDown className="w-3 h-3 opacity-70" />
           </button>
 
@@ -148,10 +169,35 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
+        {/* Chaos Simulator Trigger */}
+        <button
+          onClick={onOpenChaosModal}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+            isChaosEnabled
+              ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300'
+              : 'text-slate-700 dark:text-slate-300 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+          title="Configure SMTP Chaos & Artificial Latency"
+        >
+          <Flame className="w-3.5 h-3.5 text-amber-500" />
+          <span className="hidden xl:inline">Chaos</span>
+        </button>
+
+        {/* Export All Messages as ZIP */}
+        <a
+          href="/api/export-zip"
+          download="mailpulse-export.zip"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          title="Export all messages, raw EMLs and attachments as a single ZIP archive"
+        >
+          <Archive className="w-3.5 h-3.5" />
+          <span className="hidden lg:inline">Export ZIP</span>
+        </a>
+
         {/* Webhooks Trigger */}
         <button
           onClick={onOpenWebhookModal}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           title="Configure Local Webhook Forwarding"
         >
           <WebhookIcon className="w-3.5 h-3.5" />
@@ -190,6 +236,15 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
         )}
+
+        {/* Keyboard Shortcuts Trigger */}
+        <button
+          onClick={onOpenShortcutsModal}
+          className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          title="Keyboard shortcuts (?)"
+        >
+          <Keyboard className="w-4 h-4" />
+        </button>
 
         {/* Theme Toggle */}
         <button

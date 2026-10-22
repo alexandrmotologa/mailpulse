@@ -75,13 +75,20 @@ func main() {
 	broker := server.NewSSEBroker()
 	defer broker.Close()
 
+	// Initialize long-polling waiter registry for E2E automation
+	waiters := server.NewWaiterRegistry()
+
+	// Initialize SMTP chaos simulator
+	chaos := smtp.NewChaosManager()
+
 	// Broadcast callback when new emails are captured
 	onNewMessage := func(msg *model.Message) {
 		broker.Broadcast("new_message", msg.ToSummary())
+		waiters.Notify(msg)
 	}
 
 	// Start SMTP Daemon
-	smtpSrv, err := smtp.NewServer(*host, *smtpPort, store, disp, onNewMessage, *enableTLS)
+	smtpSrv, err := smtp.NewServer(*host, *smtpPort, store, disp, onNewMessage, *enableTLS, chaos)
 	if err != nil {
 		log.Fatalf("[SMTP] Failed to initialize SMTP server: %v", err)
 	}
@@ -94,7 +101,7 @@ func main() {
 	defer smtpSrv.Close()
 
 	// Start Web API Server
-	apiSrv := server.NewAPIServer(*host, *webPort, *smtpPort, store, disp, broker)
+	apiSrv := server.NewAPIServer(*host, *webPort, *smtpPort, store, disp, broker, waiters, chaos)
 	go func() {
 		if err := apiSrv.Start(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("[HTTP] API server error: %v", err)

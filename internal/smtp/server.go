@@ -24,6 +24,7 @@ type Backend struct {
 	storage    storage.Storage
 	dispatcher *webhook.Dispatcher
 	parser     *mime.Parser
+	chaos      *ChaosManager
 	onMessage  func(*model.Message)
 }
 
@@ -42,16 +43,22 @@ type Server struct {
 	smtpServer *smtp.Server
 	backend    *Backend
 	addr       string
+	chaos      *ChaosManager
 }
 
 // NewServer configures a new SMTP server instance.
-func NewServer(host string, port int, store storage.Storage, disp *webhook.Dispatcher, onMsg func(*model.Message), enableTLS bool) (*Server, error) {
+func NewServer(host string, port int, store storage.Storage, disp *webhook.Dispatcher, onMsg func(*model.Message), enableTLS bool, chaos *ChaosManager) (*Server, error) {
 	addr := fmt.Sprintf("%s:%d", host, port)
+
+	if chaos == nil {
+		chaos = NewChaosManager()
+	}
 
 	backend := &Backend{
 		storage:    store,
 		dispatcher: disp,
 		parser:     mime.NewParser(),
+		chaos:      chaos,
 		onMessage:  onMsg,
 	}
 
@@ -77,6 +84,7 @@ func NewServer(host string, port int, store storage.Storage, disp *webhook.Dispa
 		smtpServer: s,
 		backend:    backend,
 		addr:       addr,
+		chaos:      chaos,
 	}, nil
 }
 
