@@ -296,3 +296,15 @@ mailpulse/
 - [x] 12.6 Standalone Portable HTML & Full Archive ZIP Export:
   - Implement `internal/server/export.go` (`GET /api/messages/{id}/export-html` and `GET /api/export-zip`).
   - Add 1-click export triggers to `MessageDetail.tsx` and `Header.tsx`.
+
+### Task 13: CI/CD, Containerization & Accessibility Audit
+- [x] 13.1 Implement GitHub Actions CI/CD pipeline (`.github/workflows/ci.yml`):
+  - Automated test runs on Go 1.23 (`go test -v -race ./...`).
+  - Web studio build verification with Node 20.
+  - Matrix cross-compilation for Linux (amd64, arm64), macOS (amd64, arm64), and Windows (amd64).
+- [x] 13.2 Containerize with multi-stage `Dockerfile` and `docker-compose.yml`:
+  - Minimal static Alpine runtime under 25 MB with non-root security.
+  - Pre-configured volume mount for SQLite persistence.
+- [x] 13.3 Implement WCAG 2.1 AA Color Contrast Linter in `internal/linter/contrast.go`:
+  - Calculate relative luminance and contrast ratio for inline styles.
+  - Warn developers when low contrast text risks being rendered illegible by dark mode client filters.

@@ -34,7 +34,11 @@ func Evaluate(msg *model.Message) model.SpamReport {
 	linkIssues := CheckLinks(msg.MagicLinks)
 	issues = append(issues, linkIssues...)
 
-	// 3. Subject Line Analysis
+	// 3. Audit Color Contrast (WCAG 2.1 AA)
+	contrastIssues := CheckContrast(msg.HTMLBody)
+	issues = append(issues, contrastIssues...)
+
+	// 4. Subject Line Analysis
 	subject := strings.TrimSpace(msg.Subject)
 	if len(subject) > 0 {
 		letters := 0

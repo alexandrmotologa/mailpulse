@@ -49,6 +49,14 @@ Or run directly with Go:
 go run cmd/mailpulse/main.go
 ```
 
+### Running with Docker Compose
+
+```bash
+docker compose up -d
+```
+
+MailPulse starts immediately with persistent SQLite storage mounted at `./mailpulse-data`.
+
 By default:
 - The SMTP server listens on `127.0.0.1:1025`
 - The web studio interface opens at `http://127.0.0.1:8025`

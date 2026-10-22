@@ -1,0 +1,23 @@
+services:
+  mailpulse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mailpulse
+    ports:
+      - "1025:1025" # SMTP listener
+      - "8025:8025" # Web studio UI and REST API
+    environment:
+      - TZ=UTC
+    command: ["--host", "0.0.0.0", "--persist", "--db-path", "/data/mailpulse.db", "--no-open"]
+    volumes:
+      - mailpulse-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8025/api/stats"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  mailpulse-data:

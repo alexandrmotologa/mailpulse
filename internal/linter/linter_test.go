@@ -64,3 +64,22 @@ func TestSpamTriggersAndAllCapsSubject(t *testing.T) {
 		t.Errorf("expected SPAM_TRIGGER_WORDS issue")
 	}
 }
+
+func TestColorContrastAudit(t *testing.T) {
+	// Case 1: Low contrast - light gray #cccccc on white #ffffff (ratio ~ 1.6:1)
+	lowContrastHTML := `<div style="background: #ffffff; color: #cccccc;"><p>Unreadable text</p></div>`
+	issues := CheckContrast(lowContrastHTML)
+	if len(issues) == 0 {
+		t.Fatalf("expected contrast issue for #cccccc on #ffffff")
+	}
+	if issues[0].Code != "LOW_COLOR_CONTRAST" {
+		t.Errorf("expected code LOW_COLOR_CONTRAST, got %s", issues[0].Code)
+	}
+
+	// Case 2: High contrast - dark charcoal #1e293b on white #ffffff (ratio > 12:1)
+	highContrastHTML := `<div style="background-color: #ffffff; color: #1e293b;"><p>Clear readable text</p></div>`
+	cleanIssues := CheckContrast(highContrastHTML)
+	if len(cleanIssues) != 0 {
+		t.Errorf("expected 0 issues for high contrast text, got %d", len(cleanIssues))
+	}
+}
