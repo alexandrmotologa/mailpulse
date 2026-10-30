@@ -27,20 +27,20 @@ export const SpamAuditScore: React.FC<SpamAuditScoreProps> = ({ report }) => {
     switch (verdict) {
       case 'pass':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            <ShieldCheck className="w-4 h-4" /> Deliverability Pass
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0 whitespace-nowrap shadow-2xs">
+            <ShieldCheck className="w-4 h-4 shrink-0" /> Deliverability Pass
           </span>
         );
       case 'warning':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-            <AlertTriangle className="w-4 h-4" /> Deliverability Warning
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 whitespace-nowrap shadow-2xs">
+            <AlertTriangle className="w-4 h-4 shrink-0" /> Deliverability Warning
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-            <ShieldAlert className="w-4 h-4" /> High Spam Risk
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 shrink-0 whitespace-nowrap shadow-2xs">
+            <ShieldAlert className="w-4 h-4 shrink-0" /> High Spam Risk
           </span>
         );
     }
@@ -50,13 +50,13 @@ export const SpamAuditScore: React.FC<SpamAuditScoreProps> = ({ report }) => {
   const sizeKb = (report.htmlSizeBytes / 1024).toFixed(1);
 
   return (
-    <div className="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-900/40">
+    <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-50 dark:bg-slate-900/40">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Score Header Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-5 sm:gap-6">
+          <div className="flex items-start sm:items-center gap-4 sm:gap-6 min-w-0 flex-1">
             {/* Circular Gauge */}
-            <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center shrink-0">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                 <path
                   className="text-slate-100 dark:text-slate-800"
@@ -76,48 +76,50 @@ export const SpamAuditScore: React.FC<SpamAuditScoreProps> = ({ report }) => {
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center">
-                <span className="text-3xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-white">
+                <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-white">
                   {report.score}
                 </span>
                 <span className="text-[10px] uppercase font-bold text-slate-400">/ 100</span>
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-3 mb-1.5">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white whitespace-nowrap">
                   Deliverability Audit
                 </h3>
                 {getVerdictBadge(report.verdict)}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
                 Heuristic analysis evaluating anti-spam compliance, header RFC requirements, text ratios, and Gmail truncation thresholds.
               </p>
             </div>
           </div>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-2 gap-3 w-full md:w-auto">
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200/80 dark:border-slate-800">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span>Text / Image Ratio</span>
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full xl:w-auto shrink-0 pt-4 xl:pt-0 border-t xl:border-t-0 border-slate-100 dark:border-slate-800/80">
+            <div className="flex-1 sm:flex-initial sm:min-w-[145px] bg-slate-50/80 dark:bg-slate-800/60 p-3 sm:px-4 rounded-xl border border-slate-200/80 dark:border-slate-800 shrink-0 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-1 whitespace-nowrap">
+                <ImageIcon className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                <span className="font-medium">Text / Image</span>
               </div>
-              <div className="text-base font-mono font-bold text-slate-800 dark:text-slate-200">
+              <div className="text-base sm:text-lg font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                 {report.textToImageRatio.toFixed(0)}%
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200/80 dark:border-slate-800">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                <HardDrive className="w-3.5 h-3.5" />
-                <span>HTML Size</span>
+            <div className="flex-1 sm:flex-initial sm:min-w-[175px] bg-slate-50/80 dark:bg-slate-800/60 p-3 sm:px-4 rounded-xl border border-slate-200/80 dark:border-slate-800 shrink-0 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-1 whitespace-nowrap">
+                <HardDrive className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                <span className="font-medium">HTML Payload</span>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-base font-mono font-bold text-slate-800 dark:text-slate-200">
+              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <span className="text-base sm:text-lg font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                   {sizeKb} kB
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">/ 102 kB limit</span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono whitespace-nowrap">
+                  / 102 kB limit
+                </span>
               </div>
             </div>
           </div>
@@ -174,11 +176,11 @@ export const SpamAuditScore: React.FC<SpamAuditScoreProps> = ({ report }) => {
                       )}
 
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                             {issue.description}
                           </span>
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shrink-0">
                             {issue.code}
                           </span>
                         </div>

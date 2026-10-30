@@ -368,10 +368,10 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
       )}
 
       {/* Workspace Tabs Navigation (Ultra-responsive horizontal scroll without wrapping) */}
-      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 sm:px-4 flex items-center gap-1 text-xs shrink-0 overflow-x-auto no-scrollbar scroll-smooth">
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 sm:px-3 lg:px-4 flex items-center gap-0.5 sm:gap-1 text-xs shrink-0 overflow-x-auto no-scrollbar scroll-smooth">
         <button
           onClick={() => setActiveTab('preview')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
+          className={`flex items-center gap-1.5 py-2.5 px-2.5 sm:px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'preview'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -379,12 +379,12 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           title="Sandbox Preview (1)"
         >
           <Eye className="w-3.5 h-3.5" />
-          <span><span className="hidden sm:inline">HTML </span>Sandbox</span>
+          <span><span className="hidden xl:inline">HTML </span>Sandbox</span>
         </button>
 
         <button
           onClick={() => setActiveTab('text')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
+          className={`flex items-center gap-1.5 py-2.5 px-2.5 sm:px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'text'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -392,12 +392,12 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           title="Plain Text (2)"
         >
           <FileText className="w-3.5 h-3.5" />
-          <span><span className="hidden sm:inline">Plain </span>Text</span>
+          <span><span className="hidden xl:inline">Plain </span>Text</span>
         </button>
 
         <button
           onClick={() => setActiveTab('html')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
+          className={`flex items-center gap-1.5 py-2.5 px-2.5 sm:px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'html'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -405,12 +405,12 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           title="HTML Source (3)"
         >
           <Code className="w-3.5 h-3.5" />
-          <span><span className="hidden sm:inline">HTML </span>Source</span>
+          <span><span className="hidden xl:inline">HTML </span>Source</span>
         </button>
 
         <button
           onClick={() => setActiveTab('spam')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
+          className={`flex items-center gap-1.5 py-2.5 px-2.5 sm:px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'spam'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -423,7 +423,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
 
         <button
           onClick={() => setActiveTab('headers')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
+          className={`flex items-center gap-1.5 py-2.5 px-2.5 sm:px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'headers'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -431,13 +431,13 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           title="RFC Headers (5)"
         >
           <ListTree className="w-3.5 h-3.5" />
-          <span><span className="hidden sm:inline">MIME </span>Headers</span>
+          <span><span className="hidden xl:inline">MIME </span>Headers</span>
         </button>
 
         {message.attachments && message.attachments.length > 0 && (
           <button
             onClick={() => setActiveTab('attachments')}
-            className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
+            className={`flex items-center gap-1.5 py-2.5 px-2.5 sm:px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
               activeTab === 'attachments'
                 ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
                 : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'

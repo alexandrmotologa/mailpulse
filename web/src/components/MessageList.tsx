@@ -36,8 +36,8 @@ export const MessageList: React.FC<MessageListProps> = ({
 }) => {
   const filterTabs = [
     { id: '', label: 'All' },
-    { id: 'otp', label: 'OTP Codes', icon: Key },
-    { id: 'flagged', label: 'Spam Flags', icon: ShieldAlert },
+    { id: 'otp', label: 'OTP', icon: Key },
+    { id: 'flagged', label: 'Spam', icon: ShieldAlert },
     { id: 'has_attachment', label: 'Files', icon: Paperclip },
     { id: 'starred', label: 'Starred', icon: Star },
   ];

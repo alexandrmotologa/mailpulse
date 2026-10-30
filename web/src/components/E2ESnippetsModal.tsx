@@ -144,9 +144,9 @@ swaks --to ${targetEmail} --server 127.0.0.1:${smtpPort} --header "Subject: Veri
               <Terminal className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>E2E Test Automation Recipes</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+                <span className="whitespace-nowrap">E2E Test Automation Recipes</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800 shrink-0 whitespace-nowrap">
                   Zero Polling Delay
                 </span>
               </h2>
@@ -164,12 +164,12 @@ swaks --to ${targetEmail} --server 127.0.0.1:${smtpPort} --header "Subject: Veri
         </div>
 
         {/* Tab selection */}
-        <div className="flex items-center gap-1 px-6 pt-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <div className="flex items-center gap-1 px-6 pt-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 overflow-x-auto no-scrollbar">
           {(Object.keys(snippets) as SnippetTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-2 text-xs font-semibold rounded-t-lg border-b-2 transition-colors capitalize ${
+              className={`px-3 py-2 text-xs font-semibold rounded-t-lg border-b-2 transition-colors capitalize shrink-0 whitespace-nowrap ${
                 activeTab === tab
                   ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900'
                   : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
