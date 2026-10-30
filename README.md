@@ -19,6 +19,8 @@ MailPulse intercepts outgoing email traffic on port 1025 during local applicatio
 | ![Desktop Preview](docs/images/mailpulse-1.png) | ![Spam Audit](docs/images/mailpulse-2.png) |
 | **Synchronized Dual View (Desktop + iPhone 15)** | **E2E Test Automation Recipes Modal** |
 | ![Dual View](docs/images/mailpulse-3.png) | ![Test Recipes](docs/images/mailpulse-4.png) |
+| **Mobile Responsive Layout & Fast Actions** | **Deliverability & OTP Passcode Inspector** |
+| ![Mobile Layout](docs/images/mailpulse-mobile.png) | ![Desktop Viewport](docs/images/mailpulse-1.png) |
 
 ## Capabilities
 

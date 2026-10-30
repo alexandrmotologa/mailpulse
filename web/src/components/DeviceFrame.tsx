@@ -27,6 +27,7 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
   const [colorScheme, setColorScheme] = useState<ColorScheme>('light');
   const [zoom, setZoom] = useState<number>(100);
   const [isSyncScrollEnabled, setIsSyncScrollEnabled] = useState(true);
+  const [dualActiveTab, setDualActiveTab] = useState<'desktop' | 'mobile'>('desktop');
 
   const desktopIframeRef = useRef<HTMLIFrameElement>(null);
   const mobileIframeRef = useRef<HTMLIFrameElement>(null);
@@ -161,41 +162,41 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100 dark:bg-slate-950 overflow-hidden">
       {/* Top Viewport Control Bar */}
-      <div className="h-11 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 flex items-center justify-between text-xs shrink-0 select-none">
+      <div className="h-11 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 sm:px-3 flex items-center justify-between text-xs shrink-0 select-none gap-2 overflow-x-auto no-scrollbar">
         {/* Device Switcher */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/60">
+        <div className="flex items-center gap-0.5 sm:gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/60 shrink-0">
           <button
             onClick={() => setDevice('desktop')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-md font-medium transition-all shrink-0 whitespace-nowrap ${
               device === 'desktop'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-2xs font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
             title="Desktop 100%"
           >
             <Monitor className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Desktop</span>
+            <span className="hidden sm:inline">Desktop</span>
           </button>
 
           <button
             onClick={() => setDevice('dual')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-md font-medium transition-all shrink-0 whitespace-nowrap ${
               device === 'dual'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-2xs font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
             title="Dual View: Side-by-side Desktop and iPhone with sync scrolling"
           >
             <Columns2 className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Dual View</span>
+            <span className="hidden sm:inline">Dual View</span>
           </button>
 
           <button
             onClick={() => setDevice('ipad')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-md font-medium transition-all shrink-0 whitespace-nowrap ${
               device === 'ipad'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-2xs font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
             title="iPad Tablet (768px)"
           >
@@ -205,10 +206,10 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
 
           <button
             onClick={() => setDevice('iphone')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-md font-medium transition-all shrink-0 whitespace-nowrap ${
               device === 'iphone'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-2xs font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
             title="iPhone 15 (393px)"
           >
@@ -217,14 +218,14 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
           </button>
         </div>
 
-        {/* Orientation & Color Simulation */}
-        <div className="flex items-center gap-2">
+        {/* Orientation, Theme Simulation & Zoom */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {device === 'dual' && (
             <button
               onClick={() => setIsSyncScrollEnabled(!isSyncScrollEnabled)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs transition-colors ${
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs transition-colors shrink-0 whitespace-nowrap ${
                 isSyncScrollEnabled
-                  ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400'
+                  ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 font-medium'
                   : 'border-slate-200 dark:border-slate-800 text-slate-400'
               }`}
               title="Toggle Synchronized Proportional Scrolling"
@@ -237,7 +238,7 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
           {device !== 'desktop' && device !== 'dual' && (
             <button
               onClick={() => setIsLandscape(!isLandscape)}
-              className={`p-1.5 rounded-lg border transition-colors ${
+              className={`p-1.5 rounded-lg border transition-colors shrink-0 ${
                 isLandscape
                   ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-200 dark:border-indigo-800 text-indigo-600'
                   : 'border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -249,13 +250,13 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
           )}
 
           {/* Color Scheme Simulation */}
-          <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/60">
+          <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/60 shrink-0">
             <button
               onClick={() => setColorScheme('light')}
-              className={`p-1 rounded-md ${
+              className={`p-1 rounded-md transition-all ${
                 colorScheme === 'light'
-                  ? 'bg-white dark:bg-slate-700 text-amber-500 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-600'
+                  ? 'bg-white dark:bg-slate-700 text-amber-500 shadow-2xs'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
               }`}
               title="Light Mode"
             >
@@ -263,10 +264,10 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
             </button>
             <button
               onClick={() => setColorScheme('dark')}
-              className={`p-1 rounded-md ${
+              className={`p-1 rounded-md transition-all ${
                 colorScheme === 'dark'
-                  ? 'bg-white dark:bg-slate-700 text-indigo-400 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-600'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-400 shadow-2xs'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
               }`}
               title="Dark Mode (prefers-color-scheme: dark)"
             >
@@ -274,10 +275,10 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
             </button>
             <button
               onClick={() => setColorScheme('inverted')}
-              className={`p-1 rounded-md ${
+              className={`p-1 rounded-md transition-all ${
                 colorScheme === 'inverted'
-                  ? 'bg-white dark:bg-slate-700 text-purple-400 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-600'
+                  ? 'bg-white dark:bg-slate-700 text-purple-400 shadow-2xs'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
               }`}
               title="Client Inversion Simulator (Gmail/Outlook Dark)"
             >
@@ -285,9 +286,9 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
             </button>
           </div>
 
-          {/* Zoom controls */}
+          {/* Zoom controls (for device mockups) */}
           {device !== 'desktop' && device !== 'dual' && (
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-1 rounded-lg text-[11px] font-mono font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">
+            <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-1 rounded-lg text-[11px] font-mono font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60 shrink-0">
               <button 
                 onClick={() => setZoom(Math.max(50, zoom - 25))} 
                 className="hover:text-slate-900 dark:hover:text-white"
@@ -311,7 +312,7 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
             href={`/api/messages/${messageId}/html`}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
             title="Open HTML in new browser tab"
           >
             <ExternalLink className="w-3.5 h-3.5" />
@@ -320,9 +321,9 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
       </div>
 
       {/* Main Viewport Container */}
-      <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
+      <div className="flex-1 overflow-auto p-2 sm:p-4 flex items-center justify-center">
         {device === 'desktop' ? (
-          <div className="w-full h-full bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+          <div className="w-full h-full bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
             <iframe
               ref={desktopIframeRef}
               src={`/api/messages/${messageId}/html`}
@@ -333,47 +334,75 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
             />
           </div>
         ) : device === 'dual' ? (
-          /* Dual View Mode: Side-by-side Desktop and iPhone */
-          <div className="w-full h-full flex gap-4 overflow-hidden">
-            {/* Left: Desktop Viewport */}
-            <div className="flex-1 h-full bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col">
-              <div className="h-7 bg-slate-100 dark:bg-slate-800/80 px-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                <span className="flex items-center gap-1.5">
-                  <Monitor className="w-3 h-3 text-indigo-500" />
-                  <span>Desktop 100%</span>
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono">Fluid Width</span>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <iframe
-                  ref={desktopIframeRef}
-                  src={`/api/messages/${messageId}/html`}
-                  title="Dual Desktop View"
-                  className="w-full h-full border-0"
-                  sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
-                  onLoad={applyIframeColorScheme}
-                />
+          /* Dual View Mode: Responsive side-by-side or adaptive viewport */
+          <div className="w-full h-full flex flex-col overflow-hidden">
+            {/* Mobile / Narrow Screen Switcher for Dual View when width < 880px */}
+            <div className="lg:hidden flex items-center justify-center mb-2 shrink-0">
+              <div className="flex items-center gap-1 bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg text-xs font-semibold">
+                <button
+                  onClick={() => setDualActiveTab('desktop')}
+                  className={`px-3 py-1 rounded-md transition-all ${
+                    dualActiveTab === 'desktop'
+                      ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  Desktop Preview
+                </button>
+                <button
+                  onClick={() => setDualActiveTab('mobile')}
+                  className={`px-3 py-1 rounded-md transition-all ${
+                    dualActiveTab === 'mobile'
+                      ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  iPhone 15 (Sync)
+                </button>
               </div>
             </div>
 
-            {/* Right: Mobile Viewport (iPhone 15) */}
-            <div className="w-[393px] h-full shrink-0 flex flex-col items-center">
-              <div className="w-full h-7 bg-slate-100 dark:bg-slate-800/80 px-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 rounded-t-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                <span className="flex items-center gap-1.5">
-                  <Smartphone className="w-3 h-3 text-indigo-500" />
-                  <span>iPhone 15</span>
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono">393 × 852</span>
+            <div className="flex-1 w-full flex gap-3 sm:gap-4 overflow-hidden">
+              {/* Left: Desktop Viewport */}
+              <div className={`flex-1 h-full bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col ${dualActiveTab === 'mobile' ? 'hidden lg:flex' : 'flex'}`}>
+                <div className="h-7 bg-slate-100 dark:bg-slate-800/80 px-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <Monitor className="w-3 h-3 text-indigo-500" />
+                    <span>Desktop Viewport</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">Fluid 100%</span>
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <iframe
+                    ref={desktopIframeRef}
+                    src={`/api/messages/${messageId}/html`}
+                    title="Dual Desktop View"
+                    className="w-full h-full border-0"
+                    sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+                    onLoad={applyIframeColorScheme}
+                  />
+                </div>
               </div>
-              <div className="w-full flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-200 dark:border-slate-800 rounded-b-xl overflow-hidden shadow-sm">
-                <iframe
-                  ref={mobileIframeRef}
-                  src={`/api/messages/${messageId}/html`}
-                  title="Dual Mobile View"
-                  className="w-full h-full border-0"
-                  sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
-                  onLoad={applyIframeColorScheme}
-                />
+
+              {/* Right: Mobile Viewport (iPhone 15) */}
+              <div className={`w-full lg:w-[393px] h-full shrink-0 flex flex-col items-center ${dualActiveTab === 'desktop' ? 'hidden lg:flex' : 'flex'}`}>
+                <div className="w-full h-7 bg-slate-100 dark:bg-slate-800/80 px-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 rounded-t-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <Smartphone className="w-3 h-3 text-indigo-500" />
+                    <span>iPhone 15</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">393 × 852</span>
+                </div>
+                <div className="w-full flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-200 dark:border-slate-800 rounded-b-xl overflow-hidden shadow-sm">
+                  <iframe
+                    ref={mobileIframeRef}
+                    src={`/api/messages/${messageId}/html`}
+                    title="Dual Mobile View"
+                    className="w-full h-full border-0"
+                    sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+                    onLoad={applyIframeColorScheme}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -385,18 +414,18 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({ messageId }) => {
               transform: `scale(${zoom / 100})`,
               transformOrigin: 'top center',
             }}
-            className={`bg-slate-900 rounded-[38px] p-3 shadow-2xl border-4 border-slate-800 shrink-0 transition-all duration-300 relative flex flex-col`}
+            className={`bg-slate-900 rounded-[38px] p-3 shadow-2xl border-4 border-slate-800 shrink-0 transition-all duration-300 relative flex flex-col max-w-full`}
           >
-            {/* Notch / Speaker for iPhone */}
+            {/* Notch / Dynamic Island for iPhone */}
             {device === 'iphone' && !isLandscape && (
               <div className="w-24 h-4 bg-black rounded-full mx-auto mb-2 shrink-0 flex items-center justify-center">
-                <div className="w-3 h-3 rounded-full bg-slate-950 border border-slate-800 mr-2" />
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-950 border border-slate-800 mr-2" />
                 <div className="w-2 h-2 rounded-full bg-slate-900" />
               </div>
             )}
 
             {/* Inner iframe screen */}
-            <div className="w-full h-full bg-white rounded-[26px] overflow-hidden relative shadow-inner">
+            <div className="w-full flex-1 bg-white rounded-[26px] overflow-hidden relative shadow-inner">
               <iframe
                 ref={desktopIframeRef}
                 src={`/api/messages/${messageId}/html`}

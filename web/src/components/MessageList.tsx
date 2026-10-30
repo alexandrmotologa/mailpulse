@@ -7,7 +7,7 @@ import {
   Paperclip, 
   Key, 
   ShieldAlert, 
-  CheckCheck 
+  Inbox
 } from 'lucide-react';
 import { MessageSummary } from '../types';
 
@@ -51,30 +51,34 @@ export const MessageList: React.FC<MessageListProps> = ({
   };
 
   return (
-    <div className="w-full border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full shrink-0">
-      {/* Search Bar */}
-      <div className="p-3 border-b border-slate-200 dark:border-slate-800">
+    <div className="w-full border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full shrink-0 select-none">
+      {/* Search Bar & Filters */}
+      <div className="p-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
         <div className="relative">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search emails..."
+            placeholder="Search captured emails (/)..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-slate-300 dark:focus:border-slate-700 focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-colors text-slate-900 dark:text-slate-100 placeholder-slate-400"
+            className="w-full pl-8 pr-7 py-1.5 text-xs bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/80 focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none transition-all text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-2xs"
           />
-          {searchQuery && (
+          {searchQuery ? (
             <button
               onClick={() => onSearchChange('')}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
               <X className="w-3.5 h-3.5" />
             </button>
+          ) : (
+            <span className="hidden sm:inline absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600">
+              /
+            </span>
           )}
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1 mt-2.5 overflow-x-auto pb-0.5 no-scrollbar">
+        <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto pb-0.5 no-scrollbar">
           {filterTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = currentTag === tab.id;
@@ -82,10 +86,10 @@ export const MessageList: React.FC<MessageListProps> = ({
               <button
                 key={tab.id}
                 onClick={() => onTagChange(tab.id)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all shrink-0 ${
                   isActive
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-semibold'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/60 hover:bg-slate-100 dark:hover:bg-slate-700'
                 }`}
               >
                 {Icon && <Icon className="w-3 h-3" />}
@@ -97,12 +101,14 @@ export const MessageList: React.FC<MessageListProps> = ({
       </div>
 
       {/* Message List */}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
         {messages.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-400">
-            <CheckCheck className="w-6 h-6 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-            <p className="font-semibold text-slate-600 dark:text-slate-400">No emails found</p>
-            <p className="mt-1 text-slate-400">Send an email via SMTP :1025 or click "Send Sample"</p>
+          <div className="p-8 text-center text-xs text-slate-400 flex flex-col items-center justify-center h-48">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-2">
+              <Inbox className="w-5 h-5" />
+            </div>
+            <p className="font-semibold text-slate-700 dark:text-slate-300">No emails in view</p>
+            <p className="mt-1 text-[11px] text-slate-400">Send an email via SMTP :1025 or click "Send Sample"</p>
           </div>
         ) : (
           messages.map((msg) => {
@@ -111,29 +117,29 @@ export const MessageList: React.FC<MessageListProps> = ({
               <div
                 key={msg.id}
                 onClick={() => onSelect(msg.id)}
-                className={`p-3.5 cursor-pointer transition-colors relative group ${
+                className={`p-3.5 cursor-pointer transition-all relative group border-l-4 ${
                   isSelected
-                    ? 'bg-indigo-50/80 dark:bg-indigo-950/40 border-l-4 border-indigo-600'
-                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                } ${!msg.isRead ? 'bg-slate-50/40 dark:bg-slate-900/60' : ''}`}
+                    ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-600'
+                    : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                } ${!msg.isRead ? 'bg-slate-50/40 dark:bg-slate-900/40' : ''}`}
               >
                 {/* Sender & Timestamp */}
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-1.5 truncate">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     {!msg.isRead && (
-                      <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0 shadow-xs shadow-indigo-600/50" />
                     )}
-                    <span className={`text-xs truncate ${!msg.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
+                    <span className={`text-xs truncate ${!msg.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>
                       {msg.from.name || msg.from.address}
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-400 font-mono shrink-0">
+                  <span className="text-[10px] text-slate-400 font-mono shrink-0">
                     {formatTimeAgo(msg.receivedAt)}
                   </span>
                 </div>
 
                 {/* Subject */}
-                <div className={`text-xs truncate mb-1 ${!msg.isRead ? 'font-semibold text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}>
+                <div className={`text-xs truncate mb-1 ${!msg.isRead ? 'font-semibold text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'}`}>
                   {msg.subject || '(No Subject)'}
                 </div>
 
@@ -147,7 +153,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {/* OTP Code Badge */}
                     {msg.otpCode && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-mono font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md font-mono font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80">
                         <Key className="w-2.5 h-2.5" />
                         <span>{msg.otpCode}</span>
                       </span>
@@ -155,7 +161,7 @@ export const MessageList: React.FC<MessageListProps> = ({
 
                     {/* Deliverability Badge */}
                     <span
-                      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-mono font-bold border ${
+                      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md font-mono font-bold border ${
                         msg.spamScore >= 80
                           ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900'
                           : msg.spamScore >= 50
@@ -176,21 +182,21 @@ export const MessageList: React.FC<MessageListProps> = ({
                     )}
                   </div>
 
-                  {/* Actions on hover */}
+                  {/* Actions (visible on hover, or if starred) */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => onToggleStar(msg.id, !msg.isStarred, e)}
-                      className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
+                      className={`p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 ${
                         msg.isStarred ? 'text-amber-500 fill-amber-500 opacity-100' : 'text-slate-400'
                       }`}
-                      title={msg.isStarred ? 'Unstar' : 'Star'}
+                      title={msg.isStarred ? 'Unstar (s)' : 'Star (s)'}
                     >
                       <Star className={`w-3.5 h-3.5 ${msg.isStarred ? 'fill-current' : ''}`} />
                     </button>
                     <button
                       onClick={(e) => onDelete(msg.id, e)}
-                      className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                      title="Delete email"
+                      className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                      title="Delete email (Delete)"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

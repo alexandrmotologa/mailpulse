@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Star, 
   Trash2, 
@@ -19,7 +19,8 @@ import {
   FileCode,
   Activity,
   AlertCircle,
-  ChevronLeft
+  ChevronLeft,
+  MoreVertical
 } from 'lucide-react';
 import { MessageDetail as IMessageDetail, LinkProbeResult } from '../types';
 import { DeviceFrame } from './DeviceFrame';
@@ -62,10 +63,23 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [isForwarding, setIsForwarding] = useState(false);
   const [forwardSuccess, setForwardSuccess] = useState<boolean | null>(null);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   // Link Prober State
   const [isProbing, setIsProbing] = useState(false);
   const [probeResults, setProbeResults] = useState<Record<string, LinkProbeResult>>({});
+
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setIsMoreMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleCopyLink = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -82,6 +96,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
       setTimeout(() => setForwardSuccess(null), 3000);
     } finally {
       setIsForwarding(false);
+      setIsMoreMenuOpen(false);
     }
   };
 
@@ -111,97 +126,101 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
   return (
     <div className="flex-1 flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden">
       {/* Top Header Bar */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4 shrink-0 bg-white dark:bg-slate-900">
-        <div className="space-y-1.5 flex-1 min-w-0">
+      <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0 bg-white dark:bg-slate-900">
+        <div className="min-w-0 flex-1 space-y-1">
           <div className="flex items-center gap-2">
             {onBack && (
               <button
                 onClick={onBack}
-                className="md:hidden p-1 -ml-1 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="md:hidden p-1.5 -ml-1 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
                 title="Back to inbox"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
             )}
-            <h2 className="text-base font-bold text-slate-900 dark:text-white truncate">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
               {message.subject || '(No Subject)'}
             </h2>
             <button
               onClick={() => onToggleStar(message.id, !message.isStarred)}
-              className="text-slate-400 hover:text-amber-500 transition-colors shrink-0"
+              className="text-slate-400 hover:text-amber-500 transition-colors shrink-0 p-1"
               title={message.isStarred ? 'Unstar (s)' : 'Star (s)'}
             >
               <Star className={`w-4 h-4 ${message.isStarred ? 'text-amber-500 fill-amber-500' : ''}`} />
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-            <div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+            <div className="truncate max-w-[200px] sm:max-w-none">
               <span className="font-semibold text-slate-700 dark:text-slate-300">From: </span>
               <span>{message.from.name ? `${message.from.name} <${message.from.address}>` : message.from.address}</span>
             </div>
-            <div>
+            <div className="truncate max-w-[200px] sm:max-w-none hidden sm:block">
               <span className="font-semibold text-slate-700 dark:text-slate-300">To: </span>
               <span>{message.to.map((t) => t.name ? `${t.name} <${t.address}>` : t.address).join(', ')}</span>
             </div>
-            <div className="text-slate-400 font-mono">
-              {new Date(message.receivedAt).toLocaleString()}
+            <div className="text-slate-400 font-mono text-[10px] sm:text-[11px]">
+              {new Date(message.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* Action Buttons Toolbar */}
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {/* E2E Test Recipes Trigger */}
           <button
             onClick={() => onOpenE2EModal(recipientEmail)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition-colors shadow-2xs"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition-colors shadow-2xs whitespace-nowrap"
             title="Open automated test recipes (Playwright, Cypress, Pytest)"
           >
             <Terminal className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">E2E Code</span>
+            <span className="hidden sm:inline">E2E Code</span>
           </button>
 
-          <button
-            onClick={() => onToggleRead(message.id, !message.isRead)}
-            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title={message.isRead ? "Mark as unread (x)" : "Mark as read (x)"}
-          >
-            <MailCheck className="w-4 h-4" />
-          </button>
+          {/* Desktop Only Actions */}
+          <div className="hidden sm:flex items-center gap-1">
+            <button
+              onClick={() => onToggleRead(message.id, !message.isRead)}
+              className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title={message.isRead ? "Mark as unread (x)" : "Mark as read (x)"}
+            >
+              <MailCheck className="w-4 h-4" />
+            </button>
 
-          <button
-            onClick={handleForward}
-            disabled={isForwarding}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors shadow-xs"
-            title="Forward to configured local webhook"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">
-              {forwardSuccess === true ? 'Forwarded!' : forwardSuccess === false ? 'Failed' : 'Forward'}
-            </span>
-          </button>
+            <button
+              onClick={handleForward}
+              disabled={isForwarding}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors shadow-xs whitespace-nowrap"
+              title="Forward to configured local webhook"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">
+                {forwardSuccess === true ? 'Forwarded!' : forwardSuccess === false ? 'Failed' : 'Forward'}
+              </span>
+            </button>
 
-          {/* Export Self-Contained Standalone HTML */}
-          <a
-            href={`/api/messages/${message.id}/export-html`}
-            download={`mailpulse-${message.id.slice(0, 8)}.html`}
-            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Export standalone portable HTML snapshot"
-          >
-            <FileCode className="w-4 h-4" />
-          </a>
+            {/* Export Standalone Portable HTML */}
+            <a
+              href={`/api/messages/${message.id}/export-html`}
+              download={`mailpulse-${message.id.slice(0, 8)}.html`}
+              className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Export standalone portable HTML snapshot"
+            >
+              <FileCode className="w-4 h-4" />
+            </a>
 
-          {/* Download Raw RFC 5322 EML */}
-          <a
-            href={`/api/messages/${message.id}/raw`}
-            download={`${message.id}.eml`}
-            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Download raw EML message file"
-          >
-            <Download className="w-4 h-4" />
-          </a>
+            {/* Download Raw RFC 5322 EML */}
+            <a
+              href={`/api/messages/${message.id}/raw`}
+              download={`${message.id}.eml`}
+              className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Download raw EML message file"
+            >
+              <Download className="w-4 h-4" />
+            </a>
+          </div>
 
+          {/* Delete Button */}
           <button
             onClick={() => onDelete(message.id)}
             className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
@@ -209,6 +228,58 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           >
             <Trash2 className="w-4 h-4" />
           </button>
+
+          {/* Mobile "More" Menu Dropdown */}
+          <div className="relative sm:hidden" ref={moreMenuRef}>
+            <button
+              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+              className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="More actions"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+
+            {isMoreMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 text-xs">
+                <button
+                  onClick={() => {
+                    onToggleRead(message.id, !message.isRead);
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200"
+                >
+                  <MailCheck className="w-4 h-4" />
+                  <span>{message.isRead ? 'Mark as Unread' : 'Mark as Read'}</span>
+                </button>
+                <button
+                  onClick={handleForward}
+                  disabled={isForwarding}
+                  className="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Forward to Webhook</span>
+                </button>
+                <a
+                  href={`/api/messages/${message.id}/export-html`}
+                  download={`mailpulse-${message.id.slice(0, 8)}.html`}
+                  onClick={() => setIsMoreMenuOpen(false)}
+                  className="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200"
+                >
+                  <FileCode className="w-4 h-4" />
+                  <span>Export HTML</span>
+                </a>
+                <a
+                  href={`/api/messages/${message.id}/raw`}
+                  download={`${message.id}.eml`}
+                  onClick={() => setIsMoreMenuOpen(false)}
+                  className="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download .EML</span>
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -217,11 +288,11 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
 
       {/* Magic Links Strip if present */}
       {message.magicLinks && message.magicLinks.length > 0 && (
-        <div className="bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 px-4 py-2 flex items-center justify-between gap-3 overflow-x-auto shrink-0">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-4 py-2 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar shrink-0">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
             <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 shrink-0">
               <LinkIcon className="w-3 h-3 text-indigo-500" />
-              <span>Extracted Links:</span>
+              <span>Links:</span>
             </div>
 
             {message.magicLinks.map((link, idx) => {
@@ -229,19 +300,18 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
               return (
                 <div
                   key={idx}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs shrink-0 shadow-2xs"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs shrink-0 shadow-2xs whitespace-nowrap"
                 >
-                  <span className="font-semibold text-slate-800 dark:text-slate-200 max-w-[140px] truncate" title={link.text || link.url}>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 max-w-[130px] truncate" title={link.text || link.url}>
                     {link.text || link.host}
                   </span>
                   <span className="text-[10px] font-mono px-1 rounded bg-slate-100 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 uppercase">
                     {link.category}
                   </span>
 
-                  {/* Probe Result Pill if probed */}
                   {probe && (
                     <span
-                      className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded flex items-center gap-1 ${
+                      className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
                         probe.ok
                           ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                           : probe.statusCode >= 300 && probe.statusCode < 400
@@ -288,20 +358,20 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           <button
             onClick={handleProbeLinks}
             disabled={isProbing}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 shrink-0 transition-colors shadow-2xs"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 shrink-0 transition-colors shadow-2xs whitespace-nowrap"
             title="Perform active HTTP HEAD/GET health check on all links"
           >
             <Activity className={`w-3 h-3 text-indigo-500 ${isProbing ? 'animate-spin' : ''}`} />
-            <span>{isProbing ? 'Probing...' : 'Probe All Links'}</span>
+            <span>{isProbing ? 'Probing...' : 'Probe All'}</span>
           </button>
         </div>
       )}
 
-      {/* Workspace Tabs Navigation */}
-      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 flex items-center gap-1 text-xs shrink-0">
+      {/* Workspace Tabs Navigation (Ultra-responsive horizontal scroll without wrapping) */}
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 sm:px-4 flex items-center gap-1 text-xs shrink-0 overflow-x-auto no-scrollbar scroll-smooth">
         <button
           onClick={() => setActiveTab('preview')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors ${
+          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'preview'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -309,12 +379,12 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           title="Sandbox Preview (1)"
         >
           <Eye className="w-3.5 h-3.5" />
-          <span>HTML Sandbox</span>
+          <span><span className="hidden sm:inline">HTML </span>Sandbox</span>
         </button>
 
         <button
           onClick={() => setActiveTab('text')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors ${
+          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'text'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -322,12 +392,12 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           title="Plain Text (2)"
         >
           <FileText className="w-3.5 h-3.5" />
-          <span>Plain Text</span>
+          <span><span className="hidden sm:inline">Plain </span>Text</span>
         </button>
 
         <button
           onClick={() => setActiveTab('html')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors ${
+          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'html'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -335,12 +405,12 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           title="HTML Source (3)"
         >
           <Code className="w-3.5 h-3.5" />
-          <span>HTML Source</span>
+          <span><span className="hidden sm:inline">HTML </span>Source</span>
         </button>
 
         <button
           onClick={() => setActiveTab('spam')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors ${
+          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'spam'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -348,12 +418,12 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           title="Deliverability & Spam Audit (4)"
         >
           <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Spam Audit ({message.spamReport.score})</span>
+          <span>Spam Audit <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">({message.spamReport.score})</span></span>
         </button>
 
         <button
           onClick={() => setActiveTab('headers')}
-          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors ${
+          className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'headers'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -361,20 +431,20 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           title="RFC Headers (5)"
         >
           <ListTree className="w-3.5 h-3.5" />
-          <span>MIME Headers</span>
+          <span><span className="hidden sm:inline">MIME </span>Headers</span>
         </button>
 
         {message.attachments && message.attachments.length > 0 && (
           <button
             onClick={() => setActiveTab('attachments')}
-            className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors ${
+            className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 font-medium transition-colors shrink-0 whitespace-nowrap ${
               activeTab === 'attachments'
                 ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold'
                 : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             <Paperclip className="w-3.5 h-3.5" />
-            <span>Attachments ({message.attachments.length})</span>
+            <span>Files ({message.attachments.length})</span>
           </button>
         )}
       </div>
@@ -386,28 +456,28 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
         )}
 
         {activeTab === 'text' && (
-          <div className="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-950">
-            <pre className="font-mono text-xs whitespace-pre-wrap leading-relaxed text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs max-w-4xl mx-auto">
+          <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-50 dark:bg-slate-950">
+            <pre className="font-mono text-xs whitespace-pre-wrap leading-relaxed text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs max-w-4xl mx-auto">
               {message.textBody || '(No plain text body provided)'}
             </pre>
           </div>
         )}
 
         {activeTab === 'html' && (
-          <div className="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-950">
+          <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-50 dark:bg-slate-950">
             <div className="max-w-4xl mx-auto">
               <div className="flex justify-end mb-2">
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(message.htmlBody);
                   }}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 shadow-2xs"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 shadow-2xs transition-colors"
                 >
-                  <Copy className="w-3 h-3" />
+                  <Copy className="w-3.5 h-3.5" />
                   <span>Copy HTML</span>
                 </button>
               </div>
-              <pre className="font-mono text-xs whitespace-pre-wrap leading-relaxed text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-x-auto">
+              <pre className="font-mono text-xs whitespace-pre-wrap leading-relaxed text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-x-auto">
                 {message.htmlBody || '(No HTML body provided)'}
               </pre>
             </div>
@@ -423,37 +493,36 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
         )}
 
         {activeTab === 'attachments' && (
-          <div className="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-950">
+          <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-50 dark:bg-slate-950">
             <div className="max-w-3xl mx-auto space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
                 Message Attachments ({message.attachments.length})
               </h3>
-              {message.attachments.map((att) => (
+              {message.attachments.map((att, idx) => (
                 <div
-                  key={att.id}
-                  className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between"
+                  key={idx}
+                  className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center">
-                      <Paperclip className="w-5 h-5" />
+                    <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                      <Paperclip className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                        {att.filename}
+                      <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">
+                        {att.filename || 'attachment'}
                       </div>
-                      <div className="text-xs text-slate-400 font-mono">
+                      <div className="text-[11px] text-slate-400 font-mono">
                         {att.contentType} • {(att.size / 1024).toFixed(1)} kB
                       </div>
                     </div>
                   </div>
-
                   <a
-                    href={`/api/messages/${message.id}/attachments/${encodeURIComponent(att.filename)}`}
+                    href={`/api/messages/${message.id}/attachments/${idx}`}
                     download={att.filename}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+                    className="p-2 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    title="Download attachment"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download</span>
+                    <Download className="w-4 h-4" />
                   </a>
                 </div>
               ))}
